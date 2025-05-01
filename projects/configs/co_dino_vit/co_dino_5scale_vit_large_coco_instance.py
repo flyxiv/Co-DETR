@@ -4,12 +4,14 @@ _base_ = [
 ]
 checkpoint_config = dict(interval=1)
 resume_from = None
-load_from = None
-pretrained = None
+load_from = './checkpoints/co_detr_pretrained.pth' 
+pretrained = None 
 window_block_indexes = (
     list(range(0, 3)) + list(range(4, 7)) + list(range(8, 11)) + list(range(12, 15)) + list(range(16, 19)) +
     list(range(20, 23)) + list(range(24, 27)))
 residual_block_indexes = []
+
+NUM_CLASSES = 2
 
 num_dec_layer = 6
 lambda_2 = 2.0
@@ -77,7 +79,7 @@ model = dict(
         fusion_type='MultiBranchFusionAvg', # slighly better than w/o global avg feature
         dilations=[1, 3, 5],
         semantic_out_stride=4,
-        stage_num_classes=[80, 80, 80, 1],  # use class-agnostic classifier in the last stage
+        stage_num_classes=[NUM_CLASSES, NUM_CLASSES, NUM_CLASSES, 1],  # use class-agnostic classifier in the last stage
         stage_sup_size=[14, 28, 56, 112],
         pre_upsample_last_stage=False,      # compute logits and then upsample them in the last stage
         upsample_cfg=dict(type='bilinear', scale_factor=2),
@@ -95,14 +97,14 @@ model = dict(
         in_channels=256,
         conv_out_channels=256,
         fc_out_channels=1024,
-        num_classes=80,
+        num_classes=NUM_CLASSES,
         score_use_sigmoid=True,
         norm_cfg=dict(type='LN2d'),
         loss_iou=dict(type='MSELoss', loss_weight=0.5 * num_dec_layer * lambda_2)),
     query_head=dict(
         type='CoDINOHead',
         num_query=1500,
-        num_classes=80,
+        num_classes=NUM_CLASSES,
         num_feature_levels=5,
         in_channels=2048,
         sync_cls_avg_factor=True,
@@ -180,7 +182,7 @@ model = dict(
             conv_out_channels=256,
             fc_out_channels=1024,
             roi_feat_size=7,
-            num_classes=80,
+            num_classes=NUM_CLASSES,
             bbox_coder=dict(
                 type='DeltaXYWHBBoxCoder',
                 target_means=[0., 0., 0., 0.],
@@ -193,7 +195,7 @@ model = dict(
             loss_bbox=dict(type='GIoULoss', loss_weight=10.0 * num_dec_layer * lambda_2)))],
     bbox_head=[dict(
         type='CoATSSHead',
-        num_classes=80,
+        num_classes=NUM_CLASSES,
         in_channels=256,
         stacked_convs=1,
         feat_channels=256,
